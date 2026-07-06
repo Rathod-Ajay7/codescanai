@@ -101,6 +101,7 @@ lineNumber = Math.max(1, Math.min(lineNumber, maxLines));
 const handleEditorMount = (editor) => {
   editorRef.current = editor;
 };
+  const hasBugs = Array.isArray(result?.bugs) && result.bugs.length > 0;
   const languages = [
     { name: "JavaScript", value: "javascript" },
     { name: "TypeScript", value: "typescript" },
@@ -116,15 +117,24 @@ const handleEditorMount = (editor) => {
       <Header isDark={isDark} setIsDark={setIsDark} user={user} />
       <select
         onChange={(e) => setlanguage(e.target.value)}
-        className=" flex mx-auto bg-transparent dark:text-white"
+        className="flex mx-auto bg-transparent dark:bg-black dark:text-white"
         value={language}
       >
-        <option value="" disabled>
+        <option
+          value=""
+          disabled
+          className="text-[#17171d] bg-transparent dark:text-white"
+        >
           select Language
         </option>
         {languages.map((lang) => {
           return (
-            <option key={lang.value} value={lang.value}>
+            <option
+              key={lang.value}
+              value={lang.value}
+              className="text-[#17171d] bg-transparent dark:text-gray-50"
+            >
+            
               {lang.name}
             </option>
           );
@@ -178,7 +188,7 @@ const handleEditorMount = (editor) => {
                 <h3 className="text-black dark:text-white font-semibold text-lg mb-3">
                   Bugs Found
                 </h3>
-                {!Array.isArray(result?.bugs) || result.bugs.length === 0 ? (
+                {!hasBugs ? (
                   <p className="text-green-600">No bugs found!</p>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -195,6 +205,19 @@ const handleEditorMount = (editor) => {
                   </div>
                 )}
               </div>
+
+              {hasBugs && (
+                <div className="flex justify-start">
+                  <Button
+                    variant="outline"
+                    className="bg-green-600 text-white px-5 hover:bg-green-700"
+                    onClick={handleGenerateFixed}
+                    disabled={isLoadingFixed}
+                  >
+                    {isLoadingFixed ? "Generating..." : "Generate Fixed Code"}
+                  </Button>
+                </div>
+              )}
 
               {/* Complexity */}
               <div>
@@ -266,14 +289,6 @@ const handleEditorMount = (editor) => {
           disabled={!code || !language || isLoading}
         >
           {isLoading ? "Analyzing..." : "Analysis"}
-        </Button>
-        <Button
-          variant="outline"
-          className="bg-green-600 text-white px-10"
-          onClick={handleGenerateFixed}
-          disabled={!code || !language || isLoadingFixed}
-        >
-          {isLoadingFixed ? "Generating..." : "Generate Fixed Code"}
         </Button>
       </div>
     </div>
