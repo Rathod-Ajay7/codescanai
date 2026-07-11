@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { auth } from "../../lib/firebase"
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider
 } from "firebase/auth"
 import { useNavigate } from "react-router-dom"
@@ -18,6 +19,26 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth)
+        if (result?.user) {
+          navigate("/Analysis")
+        }
+      } catch (err) {
+        console.error("Redirect check failed:", err)
+        // Check for specific redirect missing-initial-state or OAuth mismatch errors
+        if (err.message?.includes("unauthorized_client") || err.code === "auth/unauthorized-domain") {
+           setError("Google Auth Configuration Error: You MUST add https://codescanai-six.vercel.app/__/auth/handler to your Google Cloud Console OAuth Authorized Redirect URIs.")
+        } else if (err.code !== "auth/missing-initial-state" && !err.message?.includes("missing-initial-state")) {
+          setError(err.message)
+        }
+      }
+    }
+    checkRedirect()
+  }, [navigate])
 
   // Sign Up
   const handleSignUp = async (e) => {
@@ -56,17 +77,15 @@ export default function LoginPage() {
   }
 
   // Google Sign In
-  const handleGoogleSignIn = async () => {
-    setLoading(true)
+  const handleGoogleSignIn = () => {
     setError(null)
-    try {
-      const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
-      navigate("/Analysis")
-    } catch (err) {
+    setLoading(true)
+    const provider = new GoogleAuthProvider()
+    
+    signInWithRedirect(auth, provider).catch((err) => {
       setError(err.message)
-    }
-    setLoading(false)
+      setLoading(false)
+    })
   }
 
   return (

@@ -12,10 +12,22 @@ export async function analyzeCode(code, language) {
 
   const prompt = `You are an expert code reviewer specializing in ${language}.
 
-VALIDATION: First verify the code is written in ${language}. If NOT, respond with:
+VALIDATION RULES:
+1. First, check if the code strictly matches the selected programming language: "${language}".
+2. STRICT JAVASCRIPT VS TYPESCRIPT DETECTION:
+   - If the selected language is "javascript": The code must NOT contain any TypeScript-only syntax. If the code contains explicit type annotations (e.g., \`let x: number\`, \`function f(x: string): void\`, type casting like \`as string\` or \`<string>\`), type/interface/enum declarations (e.g., \`interface User {}\`, \`type ID = string\`, \`enum Status {}\`), or generics (e.g., \`Array<string>\` or \`<T>\` on functions/classes), you MUST treat it as a language mismatch and reject it. JavaScript code must be plain JavaScript.
+   - If the selected language is "typescript": The code MUST contain TypeScript-specific typing features or static type declarations (e.g., explicit types on parameters, variables, return types, interfaces, type aliases, generics, etc.). If the code contains absolutely no TypeScript-specific features and is just plain untyped JavaScript, you MUST reject it as a language mismatch (unless the code snippet is trivial, i.e., less than 3 lines).
+3. OTHER LANGUAGE VALIDATION:
+   - If the selected language is "c": If the code contains any C++ constructs (such as classes, namespaces, \`std::cout\`, templates, vectors, new/delete, \`#include <iostream>\`, etc.), reject it as a mismatch.
+   - If the selected language is "cpp": If the code is purely standard C with zero C++ features (no classes, no standard library templates, no namespaces, no iostream, etc.), recommend/reject as mismatch.
+   - If the selected language is "html": The code must contain HTML tags. If it is pure CSS or pure JavaScript (without html wrappers/tags), reject it.
+   - If the selected language is "css": The code must contain CSS selectors and rule blocks. If it is HTML or JS, reject it.
+   - If the selected language is "sql": The code must contain SQL queries/statements. If it contains general-purpose code in another language, reject it.
+
+If the validation fails (i.e. the code does not match the selected language or contains syntax constructs from another language), you MUST return EXACTLY this JSON and nothing else (do not return any other text, analysis, or explanation):
 {"error": "Code language does not match selected language. Please select the correct language."}
 
-IF CODE IS ${language}, analyze and respond with ONLY this JSON (no markdown, no extra text):
+IF the code is indeed written in ${language}, analyze and respond with ONLY this JSON (no markdown, no extra text):
 {
   "bugs": ["Line X: bug description", "Line Y: another bug"],
   "timeComplexity": "O(n)",
@@ -44,7 +56,7 @@ RULES:
 - Start every bug with "Line X:" where X is the exact line number from the code.
 - Missing brackets, parentheses, braces, quotes, imports, declarations, or invalid language syntax are bugs and must be reported.
 - If code would fail to compile, parse, or execute, report the exact line causing the failure.
-- Do not report a bug unless you are confident the code produces incorrect behavior.If a section of code is unusual but logically correct, do not report it as a bug.
+- Do not report a bug unless you are confident the code produces incorrect behavior. If a section of code is unusual but logically correct, do not report it as a bug.
 - Function names, variable names, spelling mistakes, and naming conventions are NOT bugs unless they cause compilation errors or incorrect behavior.
 - Do NOT report typos in identifiers if they are used consistently throughout the code.
 - Do NOT assume code is incorrect because it differs from common or textbook implementations.
@@ -57,11 +69,12 @@ RULES:
 - If confidence that an issue is a real bug is below 80%, do not include it in the bugs array.
 - NEVER report naming, spelling, grammar, readability, maintainability, or style issues as bugs.
 - Before reporting a logical bug, identify a specific input that would produce an incorrect result. If no concrete failing input can be found, do not report the issue as a bug.
-- MUST include the exact Line number for every bug so it can be highlighted in the editor.`;
+- MUST include the exact Line number for every bug so it can be highlighted in the editor.
+- EXTREMELY IMPORTANT: Explain every bug in very short, simple, clear, and plain language. Avoid long-winded paragraphs, overly academic descriptions, or complex jargon. Tell the user *what* is wrong and *how* to fix it in a single concise sentence.`;
 
-  
-const result = await model.generateContent(prompt);
- const response = result.response.text();
+
+  const result = await model.generateContent(prompt);
+  const response = result.response.text();
 
   const match = response.match(/\{[\s\S]*\}/);
 

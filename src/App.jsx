@@ -27,12 +27,14 @@ function App() {
     )
   }
 
+  const hasUser = user || auth.currentUser;
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={user ? <Navigate to="/Analysis" /> : <HomePage isDark={isDark} setIsDark={setIsDark}/>} />
-        <Route path="/login" element={user ? <Navigate to="/Analysis" /> : <LoginPage/>}/>
-        <Route path="/Analysis" element={user ? <AnalysisPage isDark={isDark} setIsDark={setIsDark} user={user}/> : <Navigate to="/login" />}/>
+        <Route path="/" element={hasUser ? <Navigate to="/Analysis" /> : <HomePage isDark={isDark} setIsDark={setIsDark}/>} />
+        <Route path="/login" element={hasUser ? <Navigate to="/Analysis" /> : <LoginPage/>}/>
+        <Route path="/Analysis" element={hasUser ? <AnalysisPage isDark={isDark} setIsDark={setIsDark} user={hasUser}/> : <Navigate to="/login" />}/>
       </Routes>
     </BrowserRouter>
   )

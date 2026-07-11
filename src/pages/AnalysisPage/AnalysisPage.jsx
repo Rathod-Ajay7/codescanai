@@ -13,12 +13,14 @@ function AnalysisPage({ isDark, setIsDark, user }) {
   const [isLoadingFixed, setIsLoadingFixed] = useState(false);
   const editorRef = useRef(null);
   const decorationsRef = useRef([]);
+  const lastAnalyzedCodeRef = useRef("");
 
   const handleAnalyze = async () => {
     if (!code || !language) return;
     setIsLoading(true);
     setError(null);
     setFixedCode(null);
+    lastAnalyzedCodeRef.current = code;
     try {
       const data = await analyzeCode(code, language);
       if (data.error) {
@@ -29,6 +31,8 @@ function AnalysisPage({ isDark, setIsDark, user }) {
       }
     } catch (error) {
       console.error(error);
+      setError(error.message || "An error occurred during analysis.");
+      setResult(null);
     } finally {
       setIsLoading(false);
     }
@@ -59,11 +63,12 @@ useEffect(() => {
     const newDecorations = result.bugs.map((bug, index) => {
       // Extract line number from "Line X:" format
       const lineMatch = bug.match(/Line\s+(\d+)/);
-const maxLines = code.split("\n").length;
+      const model = editorRef.current.getModel();
+      const maxLines = model ? model.getLineCount() : 1;
 
-let lineNumber = lineMatch ? parseInt(lineMatch[1], 10) : index + 1;
+      let lineNumber = lineMatch ? parseInt(lineMatch[1], 10) : index + 1;
 
-lineNumber = Math.max(1, Math.min(lineNumber, maxLines));
+      lineNumber = Math.max(1, Math.min(lineNumber, maxLines));
 
       return {
         range: {
@@ -98,6 +103,18 @@ lineNumber = Math.max(1, Math.min(lineNumber, maxLines));
   }
 }, [result]);
 
+// Clear error highlights when the user changes the code
+useEffect(() => {
+  if (code !== lastAnalyzedCodeRef.current) {
+    if (editorRef.current) {
+      decorationsRef.current = editorRef.current.deltaDecorations(
+        decorationsRef.current,
+        []
+      );
+    }
+  }
+}, [code]);
+
 const handleEditorMount = (editor) => {
   editorRef.current = editor;
 };
@@ -108,8 +125,18 @@ const handleEditorMount = (editor) => {
     { name: "Python", value: "python" },
     { name: "Java", value: "java" },
     { name: "C++", value: "cpp" },
-    { name: "Rust", value: "rust" },
+    { name: "C#", value: "csharp" },
+    { name: "C", value: "c" },
     { name: "Go", value: "go" },
+    { name: "Rust", value: "rust" },
+    { name: "HTML", value: "html" },
+    { name: "CSS", value: "css" },
+    { name: "SQL", value: "sql" },
+    { name: "PHP", value: "php" },
+    { name: "Ruby", value: "ruby" },
+    { name: "Swift", value: "swift" },
+    { name: "Kotlin", value: "kotlin" },
+    { name: "Shell / Bash", value: "shell" },
   ];
   
   return (
