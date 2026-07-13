@@ -58,66 +58,66 @@ function AnalysisPage({ isDark, setIsDark, user }) {
     }
   };
   // Add bug decorations to the editor
-useEffect(() => {
-  if (editorRef.current && result && result.bugs && result.bugs.length > 0) {
-    const newDecorations = result.bugs.map((bug, index) => {
-      // Extract line number from "Line X:" format
-      const lineMatch = bug.match(/Line\s+(\d+)/);
-      const model = editorRef.current.getModel();
-      const maxLines = model ? model.getLineCount() : 1;
+  useEffect(() => {
+    if (editorRef.current && result && result.bugs && result.bugs.length > 0) {
+      const newDecorations = result.bugs.map((bug, index) => {
+        // Extract line number from "Line X:" format
+        const lineMatch = bug.match(/Line\s+(\d+)/);
+        const model = editorRef.current.getModel();
+        const maxLines = model ? model.getLineCount() : 1;
 
-      let lineNumber = lineMatch ? parseInt(lineMatch[1], 10) : index + 1;
+        let lineNumber = lineMatch ? parseInt(lineMatch[1], 10) : index + 1;
 
-      lineNumber = Math.max(1, Math.min(lineNumber, maxLines));
+        lineNumber = Math.max(1, Math.min(lineNumber, maxLines));
 
-      return {
-        range: {
-          startLineNumber: lineNumber,
-          startColumn: 1,
-          endLineNumber: lineNumber,
-          endColumn: 1000,
-        },
-        options: {
-          isWholeLine: true,
-          className: "bug-highlight",
-          glyphMarginClassName: "codicon codicon-error",
-          glyphMarginHoverMessage: { value: `${bug}` },
-          minimap: {
-            color: "#ff0000",
-            position: 2,
+        return {
+          range: {
+            startLineNumber: lineNumber,
+            startColumn: 1,
+            endLineNumber: lineNumber,
+            endColumn: 1000,
           },
-        },
-      };
-    });
+          options: {
+            isWholeLine: true,
+            className: "bug-highlight",
+            glyphMarginClassName: "codicon codicon-error",
+            glyphMarginHoverMessage: { value: `${bug}` },
+            minimap: {
+              color: "#ff0000",
+              position: 2,
+            },
+          },
+        };
+      });
 
-    decorationsRef.current = editorRef.current.deltaDecorations(
-      decorationsRef.current,
-      newDecorations
-    );
-  } else if (editorRef.current) {
-    // Clear decorations if no bugs
-    decorationsRef.current = editorRef.current.deltaDecorations(
-      decorationsRef.current,
-      []
-    );
-  }
-}, [result]);
-
-// Clear error highlights when the user changes the code
-useEffect(() => {
-  if (code !== lastAnalyzedCodeRef.current) {
-    if (editorRef.current) {
+      decorationsRef.current = editorRef.current.deltaDecorations(
+        decorationsRef.current,
+        newDecorations
+      );
+    } else if (editorRef.current) {
+      // Clear decorations if no bugs
       decorationsRef.current = editorRef.current.deltaDecorations(
         decorationsRef.current,
         []
       );
     }
-  }
-}, [code]);
+  }, [result]);
 
-const handleEditorMount = (editor) => {
-  editorRef.current = editor;
-};
+  // Clear error highlights when the user changes the code
+  useEffect(() => {
+    if (code !== lastAnalyzedCodeRef.current) {
+      if (editorRef.current) {
+        decorationsRef.current = editorRef.current.deltaDecorations(
+          decorationsRef.current,
+          []
+        );
+      }
+    }
+  }, [code]);
+
+  const handleEditorMount = (editor) => {
+    editorRef.current = editor;
+  };
   const hasBugs = Array.isArray(result?.bugs) && result.bugs.length > 0;
   const languages = [
     { name: "JavaScript", value: "javascript" },
@@ -138,7 +138,7 @@ const handleEditorMount = (editor) => {
     { name: "Kotlin", value: "kotlin" },
     { name: "Shell / Bash", value: "shell" },
   ];
-  
+
   return (
     <div className=" min-h-screen  dark:bg-[#17171d] ">
       <Header isDark={isDark} setIsDark={setIsDark} user={user} />
@@ -161,7 +161,7 @@ const handleEditorMount = (editor) => {
               value={lang.value}
               className="text-[#17171d] bg-transparent dark:text-gray-50"
             >
-            
+
               {lang.name}
             </option>
           );
